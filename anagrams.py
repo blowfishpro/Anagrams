@@ -2,12 +2,13 @@
 # takes a list of words and finds all anagrams
 #
 # inputs:
-#	-w, --wordlist :	Text file containing word list to analyze.  Can be space, tab, or newline separated.
-#							If not found will search for system dictionary.
-#	-o, --output :		Text file to output anagrams to.  Will be overwritten if it already exists.
-#	-m, --minletters :	Minimum number of letters for a word to be considered in anagram search.  Minimum is 2.  Default is 4.
-#	-p, --print :		Print output of anagrams to stdout?  If --output is not specified, this flag is set regardless.
-#	-v, --verbose :		If set, make output verbose.
+#	-w, --wordlist :		Text file containing word list to analyze.  Can be space, tab, or newline separated.
+#								If not found will search for system dictionary.
+#	-o, --output :			Text file to output anagrams to.  Will be overwritten if it already exists.
+#	-m, --minletters :		Minimum number of letters for a word to be considered in anagram search.  Minimum is 2.  Default is 4.
+#	-c, --discard-capitals	If set, discard capitalized words in anagram search.
+#	-p, --print :			If set, print list of anagrams to stdout.  If --output is not specified, this flag is set regardless.
+#	-v, --verbose :			If set, make output verbose.
 #
 # System dictionaries searched for:
 #	/usr/dict/words
@@ -109,13 +110,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-w", "--wordlist", type=str, default=None, help="Text file containing word list to analyze.  If not specified, will search for system dictionaries in common locations.")
 parser.add_argument("-o", "--output", type=str, default=None, help="Text file to write output to.")
 parser.add_argument("-m", "--minletters", type=int, default=4, help="Minimum number of letters in a word for it to be considered for anagram search.  Minimum is 2.  Default is 4.")
-parser.add_argument("-p", "--print", dest="print_output", action="store_true", help="Print output of anagrams to stdout.  If --output specified, default is false.  True otherwise.")
-parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.  Default is false.")
+parser.add_argument("-c", "--discard-capitals", dest="discard_capitals", action="store_true", help="If set, discared capitalized words when searching for anagrams.")
+parser.add_argument("-p", "--print", dest="print_output", action="store_true", help="If set, print output of anagrams to stdout.  Set regardless if no --output specified.")
+parser.add_argument("-v", "--verbose", action="store_true", help="If set, make output verbose output.")
 
 args = parser.parse_args()
 wordlist_filename = args.wordlist
 output_filename = args.output
 min_letters = args.minletters
+discard_capitals = args.discard_capitals
 print_output = args.print_output
 verbose = args.verbose
 
@@ -172,8 +175,11 @@ printv("Sorting letters in each word...")
 anagram_words = []
 for word in words:
 	
-	if len(word) >= min_letters:
-		anagram_words.append(anagram_word(word))
+	if len(word) < min_letters: continue
+	if discard_capitals and word[0].isupper(): continue
+	
+	# create anagram_word which will sort letters in its constructor
+	anagram_words.append(anagram_word(word))
 
 # sort words by comparing sorted letters
 

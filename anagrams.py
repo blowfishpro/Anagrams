@@ -2,15 +2,26 @@
 # takes a list of words and finds all anagrams
 #
 # inputs:
-#	-w, --wordlist : Text file containing word list to analyze.  Can be space, tab, or newline separated.  If not found will search for system dictionary.
-#	-o, --output : Text file to output anagrams to.  Will be overwritten if it already exists.
-#	-m, --minletters : Minimum number of letters for a word to be considered in anagram search.  Minimum is 2.  Default is 4.
-#	-p, --print : Print output of anagrams to stdout?  If --output is not specified, this flag is set regardless.
-#	-v, --verbose : Verbose output?
+#	-w, --wordlist :	Text file containing word list to analyze.  Can be space, tab, or newline separated.
+#							If not found will search for system dictionary.
+#	-o, --output :		Text file to output anagrams to.  Will be overwritten if it already exists.
+#	-m, --minletters :	Minimum number of letters for a word to be considered in anagram search.  Minimum is 2.  Default is 4.
+#	-p, --print :		Print output of anagrams to stdout?  If --output is not specified, this flag is set regardless.
+#	-v, --verbose :		If set, make output verbose.
 #
 # System dictionaries searched for:
 #	/usr/dict/words
 #	/usr/share/dict/words
+#
+# basic algorithm:
+# 	- read list of words from file
+#	- sort the letters in each word
+#	- sort the list of words, by comparison of the sorted letters
+#	- iterate through sorted list, picking anagrams by blocks with same sorted letters
+
+#################
+# package imports
+#################
 
 import sys
 import os
@@ -18,11 +29,27 @@ import string
 import time
 import argparse
 
+###########
+# constants
+###########
+
+# possible locations to find a system dictionary
+
 system_dictionaries = ["/usr/dict/words", "/usr/share/dict/words"]
+
+#################################
+# function and class declarations
+#################################
+
+# printing function - keeps track of whether verbose or not
+# saves code over having to check before every print
 
 def printv(string):
 	if verbose:
 		print(string)
+
+# class for keeping track of word with sorted letters
+# need to include both sorted letters and original word, so need object with both
 
 class anagram_word:
 	
@@ -30,7 +57,8 @@ class anagram_word:
 	def __init__(self, word = ""):
 		# get rid of any capitalization
 		self.word = word.lower()
-		# possibly use a better sorting algorithm
+		# simplest letter sorting available
+		# might not be the most efficient way to do this
 		self.word_sorted = string.join(sorted(self.word), "")
 		self.len = len(self.word)
 	
@@ -46,20 +74,30 @@ class anagram_word:
 	def is_anagram_of(self, other):
 		return self.word_sorted == other.word_sorted
 	
-	# Apparently Python can do this comparison automatically (and it's faster - native assembly implementation vs scripting implementation)
+	# this is where the actual comparison happens - one the letters are sorted, can compare words directly
+	# python's native string comparison gives the desired result if the letters are sorted
 	def compare(word1, word2):
 		return cmp(word1.word_sorted, word2.word_sorted)
-	"""
-	def compare(word1, word2):
-		for l1, l2 in zip(word1.word_sorted, word2.word_sorted):
-			if l1 > l2: return 1
-			elif l1 < l2: return -1
-		return cmp(len(word1), len(word2))
-	"""
+	
+	# slower implementation that shows the comparison explicitly
+	
+	#def compare(word1, word2):
+	#	for l1, l2 in zip(word1.word_sorted, word2.word_sorted):
+	#		if l1 > l2: return 1
+	#		elif l1 < l2: return -1
+	#	return cmp(len(word1), len(word2))
+
+###############
+# start program
+###############
+
+# keep track of time taken to complete program
 
 start_time = time.time()
 
 print("\nanagrams.py - Anagram Finder\n")
+
+# parse command line arguments
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-w", "--wordlist", type=str, default=None, help="Text file containing word list to analyze.  If not specified, will search for system dictionaries in common locations.")
@@ -80,7 +118,7 @@ verbose = args.verbose
 if min_letters < 2:
 	raise Exception("The minimum number of letters must be at least two.")
 
-# check it output file is valid
+# check if output file is valid
 
 if output_filename:
 	outbase, outf = os.path.split(output_filename)
@@ -119,6 +157,10 @@ words = file.read().split()
 
 printv("Found {} words in word list.".format(len(words)))
 
+#########
+# sorting
+#########
+
 printv("Sorting letters in each word...")
 
 anagram_words = []
@@ -127,9 +169,15 @@ for word in words:
 	if len(word) >= min_letters:
 		anagram_words.append(anagram_word(word))
 
+# sort words by comparing sorted letters
+
 printv("Sorting words...")
 
 anagram_words.sort(cmp=anagram_word.compare)
+
+########
+# output
+########
 
 # have all anagrams together now, just iterate through list to find them
 

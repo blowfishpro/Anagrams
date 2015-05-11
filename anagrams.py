@@ -18,6 +18,10 @@
 #	- sort the letters in each word
 #	- sort the list of words, by comparison of the sorted letters
 #	- iterate through sorted list, picking anagrams by blocks with same sorted letters
+#
+# assumptions:
+#
+#	- input is list of words containing only letters with whitespace characters (space, tab, newine) separating words
 
 #################
 # package imports
@@ -54,12 +58,14 @@ def printv(string):
 class anagram_word:
 	
 	# if word is "" create an empty word
+	# empty word starts output loop
+	# avoids having to compare to None in is_anagram_of()
 	def __init__(self, word = ""):
-		# get rid of any capitalization
-		self.word = word.lower()
+		self.word = word
 		# simplest letter sorting available
 		# might not be the most efficient way to do this
-		self.word_sorted = string.join(sorted(self.word), "")
+		# also get rid of any capitalization with lower()
+		self.word_sorted = string.join(sorted(self.word.lower()), "")
 		self.len = len(self.word)
 	
 	def __len__(self):

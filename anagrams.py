@@ -23,6 +23,7 @@
 # assumptions:
 #
 #	- input is list of words containing only letters with whitespace characters (space, tab, newine) separating words
+#	- words that are the same up to capitalization are considered anagrams, unless --discard-capitals is set
 
 #################
 # package imports
@@ -66,6 +67,8 @@ class anagram_word:
 		# simplest letter sorting available
 		# might not be the most efficient way to do this
 		# also get rid of any capitalization with lower()
+		# this could be done without converting back to a string with join(), but the next step appears to take slightly longer in that case
+		# resulting in longer overall time to run
 		self.word_sorted = string.join(sorted(self.word.lower()), "")
 		self.len = len(self.word)
 	
@@ -89,6 +92,7 @@ class anagram_word:
 	# slower implementation that shows the comparison explicitly
 	
 	#def compare(word1, word2):
+	#	# compare each letter
 	#	for l1, l2 in zip(word1.word_sorted, word2.word_sorted):
 	#		if l1 > l2: return 1
 	#		elif l1 < l2: return -1
@@ -193,6 +197,9 @@ anagram_words.sort(cmp=anagram_word.compare)
 
 # have all anagrams together now, just iterate through list to find them
 
+# if writing to file, use that file as the buffer, otherwise just use stdout
+# if writing to file and to stdout, write to file then read contents
+
 if output_filename:
 	printv("Writing to file...")
 	outbuf = open(output_filename, "w+")
@@ -203,6 +210,8 @@ else:
 # empty word starts loop
 theword = anagram_word()
 newword = True
+
+# iterate through words, pick out blocks with the same sorted letters
 
 for ang_word in anagram_words:
 	if ang_word.is_anagram_of(theword):
@@ -219,6 +228,8 @@ for ang_word in anagram_words:
 		if not newword:
 			outbuf.write("\n")
 		newword = True
+
+# if output is file but still need to print to stdout, read from the file buffer
 
 if output_filename:
 	if (print_output):

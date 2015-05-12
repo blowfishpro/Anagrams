@@ -7,7 +7,7 @@ Usage: python anagrams.py [-h] [-w WORDLIST] [-o OUTPUT] [-m MINLETTERS] [-c] [-
 
 Arguments:
 
-*  -h, --help            show this help message and exit
+*  -h, --help            Show help message and exit
 *  -w WORDLIST, --wordlist WORDLIST
                         Text file containing word list to analyze. If not
                         specified, will search for system dictionaries in

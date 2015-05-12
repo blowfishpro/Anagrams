@@ -2,13 +2,14 @@
 # takes a list of words and finds all anagrams
 #
 # inputs:
-#	-w, --wordlist :		Text file containing word list to analyze.  Can be space, tab, or newline separated.
-#								If not found will search for system dictionary.
-#	-o, --output :			Text file to output anagrams to.  Will be overwritten if it already exists.
+#	-c, --ignore-capitals	If set, ignore capitalization
 #	-m, --minletters :		Minimum number of letters for a word to be considered in anagram search.  Minimum is 2.  Default is 4.
-#	-c, --discard-capitals	If set, discard capitalized words in anagram search.
+#	-o, --output :			Text file to output anagrams to.  Will be overwritten if it already exists.
 #	-p, --print :			If set, print list of anagrams to stdout.  If --output is not specified, this flag is set regardless.
 #	-v, --verbose :			If set, make output verbose.
+#	-x, --exclude-capitals	If set, exclude any capitalized words
+#	-w, --wordlist :		Text file containing word list to analyze.  Can be space, tab, or newline separated.
+#								If not found will search for system dictionary.
 #
 # System dictionaries searched for:
 #	/usr/dict/words
@@ -64,12 +65,16 @@ class anagram_word:
 	# avoids having to compare to None in is_anagram_of()
 	def __init__(self, word = ""):
 		self.word = word
+		# if applicable, get rid of any capitalization with lower()
+		if ignore_capitals:
+			word_to_sort = self.word.lower()
+		else:
+			word_to_sort = self.word
 		# simplest letter sorting available
 		# might not be the most efficient way to do this
-		# also get rid of any capitalization with lower()
 		# this could be done without converting back to a string with join(), but the next step appears to take slightly longer in that case
 		# resulting in longer overall time to run
-		self.word_sorted = string.join(sorted(self.word.lower()), "")
+		self.word_sorted = string.join(sorted(word_to_sort), "")
 		self.len = len(self.word)
 	
 	def __len__(self):
@@ -114,15 +119,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-w", "--wordlist", type=str, default=None, help="Text file containing word list to analyze.  If not specified, will search for system dictionaries in common locations.")
 parser.add_argument("-o", "--output", type=str, default=None, help="Text file to write output to.")
 parser.add_argument("-m", "--minletters", type=int, default=4, help="Minimum number of letters in a word for it to be considered for anagram search.  Minimum is 2.  Default is 4.")
-parser.add_argument("-c", "--discard-capitals", dest="discard_capitals", action="store_true", help="If set, discared capitalized words when searching for anagrams.")
-parser.add_argument("-p", "--print", dest="print_output", action="store_true", help="If set, print output of anagrams to stdout.  Set regardless if no --output specified.")
+parser.add_argument("-c", "--ignore-captials", dest="ignore_capitals", action="store_true", help="If set, ignore capitalization (words that differ by capitalization will be considered anagrams.  Has no effect if -i, --exclude-capitals is set.")
+parser.add_argument("-x", "--exclude-capitals", dest="exclude_capitals", action="store_true", help="If set, discard any capitalized words (proper names).")
+parser.add_argument("-p", "--print", dest="print_output", action="store_true", help="If set, print output of anagrams to stdout.  Set regardless if no -o, --output specified.")
 parser.add_argument("-v", "--verbose", action="store_true", help="If set, make output verbose output.")
 
 args = parser.parse_args()
 wordlist_filename = args.wordlist
 output_filename = args.output
 min_letters = args.minletters
-discard_capitals = args.discard_capitals
+ignore_capitals = args.ignore_capitals
+exclude_capitals = args.exclude_capitals
 print_output = args.print_output
 verbose = args.verbose
 
@@ -180,7 +187,8 @@ anagram_words = []
 for word in words:
 	
 	if len(word) < min_letters: continue
-	if discard_capitals and word[0].isupper(): continue
+	# exclude capitalized words if applicable
+	if exclude_capitals and word[0].isupper(): continue
 	
 	# create anagram_word which will sort letters in its constructor
 	anagram_words.append(anagram_word(word))
